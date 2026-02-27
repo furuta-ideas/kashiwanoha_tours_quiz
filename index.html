@@ -165,12 +165,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Zen Maru Gothic',s
 
 /* Quiz photo */
 .quiz-photo-box{
-  width:92%;max-height:160px;border-radius:10px;overflow:hidden;
+  width:92%;max-height:140px;border-radius:10px;overflow:hidden;
   box-shadow:0 3px 12px rgba(0,0,0,0.12);flex-shrink:0;background:#eee;
   display:flex;align-items:center;justify-content:center;z-index:1;
   margin-top:2px;
 }
-.quiz-photo-box img{width:100%;height:auto;max-height:160px;object-fit:cover;display:block}
+.quiz-photo-box img{width:100%;height:auto;max-height:140px;object-fit:cover;display:block}
 
 /* Question box */
 .quiz-question-box{
@@ -402,7 +402,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Zen Maru Gothic',s
 @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
 .score-popup{
   position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  font-size:3em;font-weight:900;color:#FF6F00;
+  font-size:2em;font-weight:900;color:#FF6F00;white-space:nowrap;
   text-shadow:2px 2px 4px rgba(0,0,0,0.2);
   animation:scorePop 1s ease-out forwards;pointer-events:none;z-index:100;
 }
