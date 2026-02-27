@@ -681,6 +681,9 @@ const CHAR_CELEBRATION=["pptx_g17","pptx_g27","pptx_g6","pptx_p21","pptx_p41","p
 let currentQuestions=[],currentIndex=0,totalScore=0,correctCount=0,timerInterval=null,timeLeft=10,answered=false;
 let soundEnabled=true,audioCtx=null,bgmNode=null,bgmGain=null,ranking=[],totalPlayers=0;
 
+/* ========== Firebase Realtime Database ========== */
+const FIREBASE_DB_URL='https://kashiwanoha-quiz-default-rtdb.firebaseio.com';
+
 function loadRankingSync(){
   try{
     const s=localStorage.getItem('quiz-ranking-v2');
@@ -693,21 +696,33 @@ function saveRankingSync(){
 }
 async function loadRanking(){
   loadRankingSync();
+  if(!FIREBASE_DB_URL)return;
   try{
-    if(typeof window.storage!=='undefined'&&window.storage&&typeof window.storage.get==='function'){
-      const r=await window.storage.get('quiz-ranking-v2');
-      if(r&&r.value){const d=JSON.parse(r.value);ranking=d.ranking||[];totalPlayers=d.totalPlayers||0}
-    }
+    const res=await fetch(FIREBASE_DB_URL+'/scores.json');
+    if(!res.ok)return;
+    const data=await res.json();
+    if(data){
+      const entries=Object.values(data);
+      totalPlayers=entries.length;
+      ranking=entries.sort(function(a,b){return b.score-a.score});
+      if(ranking.length>200)ranking=ranking.slice(0,200);
+    }else{ranking=[];totalPlayers=0}
+    saveRankingSync();
   }catch(e){}
 }
-async function saveRanking(){
-  const data=JSON.stringify({ranking,totalPlayers});
-  try{localStorage.setItem('quiz-ranking-v2',data)}catch(e){}
+async function addScoreToFirebase(name,score){
+  if(!FIREBASE_DB_URL)return false;
   try{
-    if(typeof window.storage!=='undefined'&&window.storage&&typeof window.storage.set==='function'){
-      await window.storage.set('quiz-ranking-v2',data,true);
-    }
-  }catch(e){}
+    const res=await fetch(FIREBASE_DB_URL+'/scores.json',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:name,score:score,date:new Date().toISOString()})
+    });
+    return res.ok;
+  }catch(e){return false}
+}
+async function clearFirebaseScores(){
+  if(!FIREBASE_DB_URL)return;
+  try{await fetch(FIREBASE_DB_URL+'/scores.json',{method:'DELETE'})}catch(e){}
 }
 
 function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)()}
@@ -880,47 +895,53 @@ function nextQuestion(){currentIndex++;if(currentIndex>=10)showResult();else sho
 async function showResult(){
   loadRankingSync();
   try{await loadRanking()}catch(e){}
-  totalPlayers++;
+  /* ランキング読み込み後、まだスコア未登録の状態で順位を計算 */
+  const displayTotal=totalPlayers+1;
   const ur=getRank(totalScore);
-  try{await saveRanking()}catch(e){saveRankingSync()}
-  
+
   document.getElementById('result-char-green').src=IMAGES[randomFrom(correctCount>=5?GREEN_HAPPY:GREEN_SAD)];
   document.getElementById('result-char-pink').src=IMAGES[randomFrom(correctCount>=5?PINK_HAPPY:PINK_SAD)];
   document.getElementById('result-correct').textContent=correctCount;
   document.getElementById('result-score').textContent=totalScore.toLocaleString();
-  
+
   const btn=document.getElementById('result-action-btn');
   const msg=document.getElementById('result-rank-msg');
-  
+
   if(ur<=10){
-    msg.innerHTML='🎉 <strong>'+totalPlayers+'人中 '+ur+'位</strong>にランクイン！<br>ニックネームを登録しよう！';
+    msg.innerHTML='🎉 <strong>'+displayTotal+'人中 '+ur+'位</strong>にランクイン！<br>ニックネームを登録しよう！';
     btn.textContent='ニックネームを入力';
     btn.onclick=function(){
       document.getElementById('nickname-char').src=IMAGES[randomFrom(CHAR_CELEBRATION)];
       showScreen('nickname-screen');
     };
   }else{
-    msg.innerHTML='現在の順位: <strong>'+totalPlayers+'人中 '+ur+'位</strong>';
+    msg.innerHTML='現在の順位: <strong>'+displayTotal+'人中 '+ur+'位</strong>';
     btn.textContent='ランキングを見る';
     btn.onclick=async function(){
+      await addScoreToFirebase('ゲスト',totalScore);
       ranking.push({name:'ゲスト',score:totalScore,date:new Date().toISOString()});
       ranking.sort(function(a,b){return b.score-a.score});
       if(ranking.length>200)ranking=ranking.slice(0,200);
-      try{await saveRanking()}catch(e){saveRankingSync()}
+      totalPlayers++;
+      saveRankingSync();
+      try{await loadRanking()}catch(e){}
       showRanking();
     };
   }
   if(correctCount>=8)showConfetti();
   showScreen('result-screen');
 }
-function getRank(s){let r=1;for(const e of ranking)if(e.score>=s)r++;return r}
+function getRank(s){let r=1;for(const e of ranking)if(e.score>s)r++;return r}
 
 async function submitNickname(){
   const name=document.getElementById('nickname-input').value.trim()||'ゲスト';
+  await addScoreToFirebase(name,totalScore);
   ranking.push({name:name,score:totalScore,date:new Date().toISOString()});
   ranking.sort(function(a,b){return b.score-a.score});
   if(ranking.length>200)ranking=ranking.slice(0,200);
-  try{await saveRanking()}catch(e){saveRankingSync()}
+  totalPlayers++;
+  saveRankingSync();
+  try{await loadRanking()}catch(e){}
   document.getElementById('nickname-input').value='';
   showRanking();
 }
@@ -1011,7 +1032,7 @@ async function executeReset(){
   // Reset all data
   ranking=[];totalPlayers=0;
   try{localStorage.removeItem('quiz-ranking-v2')}catch(e){}
-  try{await saveRanking()}catch(e){}
+  try{await clearFirebaseScores()}catch(e){}
   closeAdmin();
   showRanking();
 }
