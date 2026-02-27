@@ -807,6 +807,7 @@ function prepareQuestion(){
   document.getElementById('explanation-box').style.display='none';
   document.getElementById('next-btn').style.display='none';
   var qb=document.getElementById('quiz-char-bubble');qb.classList.remove('show');qb.innerHTML='';
+  document.querySelector('.timer-bar-container').style.display='';
   const bar=document.getElementById('timer-bar');bar.style.width='100%';bar.className='timer-bar';
   document.getElementById('timer-text').textContent='10.00';
   document.getElementById('quiz-screen').scrollTop=0;
@@ -850,6 +851,7 @@ function selectAnswer(idx){
   if(ok){let bh='<div class="bubble-result correct-label">⭕ 正解！</div>';if(sc)bh+='<div class="bubble-score">+'+sc.toLocaleString()+'点</div>';bb.innerHTML=bh}
   else{bb.innerHTML='<div class="bubble-result wrong-label">❌ 不正解...</div>'}
   bb.classList.add('show');
+  document.querySelector('.timer-bar-container').style.display='none';
   const eb=document.getElementById('explanation-box');let h='';
   if(!ok){h='<div class="correct-answer">正解: '+escHtml(q.choices[q.answer])+'</div>'}
   h+='<div>'+q.explanation+'</div>';eb.innerHTML=h;eb.style.display='block';
@@ -867,6 +869,7 @@ function handleTimeout(){
   const bb=document.getElementById('quiz-char-bubble');
   bb.innerHTML='<div class="bubble-result timeout-label">⏰ 時間切れ！</div>';
   bb.classList.add('show');
+  document.querySelector('.timer-bar-container').style.display='none';
   const eb=document.getElementById('explanation-box');
   eb.innerHTML='<div class="correct-answer">正解: '+escHtml(q.choices[q.answer])+'</div><div>'+q.explanation+'</div>';
   eb.style.display='block';const nb=document.getElementById('next-btn');nb.style.display='block';nb.textContent=currentIndex<9?'次へ':'結果を見る';
