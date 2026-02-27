@@ -194,11 +194,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Zen Maru Gothic',s
   padding:12px;width:92%;font-size:0.82em;color:#555;line-height:1.6;
   box-shadow:0 2px 10px rgba(0,0,0,0.05);flex-shrink:0;z-index:1;
 }
-.explanation-box .result-label{font-size:1.2em;font-weight:900;margin-bottom:6px;text-align:center}
+.explanation-box .result-line{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.explanation-box .result-label{font-size:1.2em;font-weight:900}
 .result-label.correct-label{color:#2E7D32}
 .result-label.wrong-label{color:#C62828}
 .result-label.timeout-label{color:#E65100}
-.explanation-box .score-earned{text-align:center;font-size:1.1em;font-weight:700;color:#FF6F00;margin-bottom:4px}
+.explanation-box .score-earned{font-size:1.1em;font-weight:700;color:#FF6F00}
 
 .next-btn{
   background:linear-gradient(180deg,#42A5F5,#1E88E5);
@@ -830,8 +831,8 @@ function selectAnswer(idx){
     var sadPool=(currentIndex%2===0)?GREEN_SAD:PINK_SAD;
     document.getElementById('quiz-char').src=IMAGES[randomFrom(sadPool)]}
   const eb=document.getElementById('explanation-box');let h='';
-  if(ok){h='<div class="result-label correct-label">⭕ 正解！</div>';if(sc)h+='<div class="score-earned">+'+sc.toLocaleString()+'点</div>'}
-  else{h='<div class="result-label wrong-label">❌ 不正解...</div><div style="text-align:center;font-weight:700;color:#2E7D32;margin-bottom:6px">正解: '+escHtml(q.choices[q.answer])+'</div>'}
+  if(ok){h='<div class="result-line"><span class="result-label correct-label">⭕ 正解！</span>';if(sc)h+='<span class="score-earned">+'+sc.toLocaleString()+'点</span>';h+='</div>'}
+  else{h='<div class="result-line"><span class="result-label wrong-label">❌ 不正解...</span></div><div style="text-align:center;font-weight:700;color:#2E7D32;margin-bottom:6px">正解: '+escHtml(q.choices[q.answer])+'</div>'}
   h+='<div>'+q.explanation+'</div>';eb.innerHTML=h;eb.style.display='block';
   const nb=document.getElementById('next-btn');nb.style.display='block';nb.textContent=currentIndex<9?'次へ':'結果を見る';
   setTimeout(function(){nb.scrollIntoView({behavior:'smooth',block:'end'})},350);
@@ -845,7 +846,7 @@ function handleTimeout(){
   var sadPool=(currentIndex%2===0)?GREEN_SAD:PINK_SAD;
   document.getElementById('quiz-char').src=IMAGES[randomFrom(sadPool)];
   const eb=document.getElementById('explanation-box');
-  eb.innerHTML='<div class="result-label timeout-label">⏰ 時間切れ！</div><div style="text-align:center;font-weight:700;color:#2E7D32;margin-bottom:6px">正解: '+escHtml(q.choices[q.answer])+'</div><div>'+q.explanation+'</div>';
+  eb.innerHTML='<div class="result-line"><span class="result-label timeout-label">⏰ 時間切れ！</span></div><div style="text-align:center;font-weight:700;color:#2E7D32;margin-bottom:6px">正解: '+escHtml(q.choices[q.answer])+'</div><div>'+q.explanation+'</div>';
   eb.style.display='block';const nb=document.getElementById('next-btn');nb.style.display='block';nb.textContent=currentIndex<9?'次へ':'結果を見る';
   setTimeout(function(){nb.scrollIntoView({behavior:'smooth',block:'end'})},350);
 }
