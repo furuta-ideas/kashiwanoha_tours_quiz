@@ -868,7 +868,7 @@ function startQuiz(){
   initAudio();if(soundEnabled&&audioCtx.state==='suspended')audioCtx.resume();
   stopBGM();
   if(soundEnabled)playBGM();
-  currentQuestions=shuffle(QUIZ_DATA).slice(0,10).map(function(q){var idx=[0,1,2,3],sh=shuffle(idx);var shuffledChoices=sh.map(function(i){return q.choices[i]});var correctText=q.choices[q.answer];return{no:q.no,question:q.question,choices:shuffledChoices,answer:shuffledChoices.indexOf(correctText),explanation:q.explanation,quizImg:q.quizImg,charImg:q.charImg}});
+  currentQuestions=shuffle(QUIZ_DATA).slice(0,10).map(function(q){var idx=[0,1,2,3],sh=shuffle(idx);var shuffledChoices=sh.map(function(i){return q.choices[i]});return{no:q.no,question:q.question,choices:shuffledChoices,answerText:q.choices[q.answer],explanation:q.explanation,quizImg:q.quizImg,charImg:q.charImg}});
   currentIndex=0;totalScore=0;correctCount=0;
   prepareQuestion();
   showScreen('quiz-screen');
@@ -921,8 +921,10 @@ function showQuestion(){
 
 function selectAnswer(idx){
   if(answered)return;answered=true;clearInterval(timerInterval);
-  const q=currentQuestions[currentIndex],ok=idx===q.answer;
-  document.getElementById('quiz-choices').querySelectorAll('.choice-btn').forEach((b,i)=>{b.disabled=true;if(i===q.answer)b.classList.add('correct');if(i===idx&&!ok)b.classList.add('wrong')});
+  const q=currentQuestions[currentIndex];
+  const btns=document.getElementById('quiz-choices').querySelectorAll('.choice-btn');
+  const ok=btns[idx].textContent===q.answerText;
+  btns.forEach(function(b,i){b.disabled=true;if(b.textContent===q.answerText)b.classList.add('correct');if(i===idx&&!ok)b.classList.add('wrong')});
   let sc=0;
   if(ok){sc=Math.round(timeLeft/10*10000);sc=Math.max(sc,100);totalScore+=sc;correctCount++;playSFX('correct');showScorePopup(sc);
     var happyPool=(currentIndex%2===0)?GREEN_HAPPY:PINK_HAPPY;
@@ -936,7 +938,7 @@ function selectAnswer(idx){
   bb.classList.add('show');
   document.querySelector('.timer-bar-container').style.display='none';
   const eb=document.getElementById('explanation-box');let h='';
-  if(!ok){h='<div class="correct-answer">正解: '+escHtml(q.choices[q.answer])+'</div>'}
+  if(!ok){h='<div class="correct-answer">正解: '+escHtml(q.answerText)+'</div>'}
   h+='<div>'+q.explanation+'</div>';eb.innerHTML=h;eb.style.display='block';
   const nb=document.getElementById('next-btn');nb.style.display='block';nb.textContent=currentIndex<9?'次へ':'結果を見る';
   setTimeout(function(){nb.scrollIntoView({behavior:'smooth',block:'end'})},350);
@@ -945,7 +947,7 @@ function selectAnswer(idx){
 function handleTimeout(){
   if(answered)return;answered=true;
   const q=currentQuestions[currentIndex];
-  document.getElementById('quiz-choices').querySelectorAll('.choice-btn').forEach((b,i)=>{b.disabled=true;if(i===q.answer)b.classList.add('correct')});
+  document.getElementById('quiz-choices').querySelectorAll('.choice-btn').forEach(function(b){b.disabled=true;if(b.textContent===q.answerText)b.classList.add('correct')});
   playSFX('wrong');
   var sadPool=(currentIndex%2===0)?GREEN_SAD:PINK_SAD;
   document.getElementById('quiz-char').src=IMAGES[randomFrom(sadPool)];
@@ -954,7 +956,7 @@ function handleTimeout(){
   bb.classList.add('show');
   document.querySelector('.timer-bar-container').style.display='none';
   const eb=document.getElementById('explanation-box');
-  eb.innerHTML='<div class="correct-answer">正解: '+escHtml(q.choices[q.answer])+'</div><div>'+q.explanation+'</div>';
+  eb.innerHTML='<div class="correct-answer">正解: '+escHtml(q.answerText)+'</div><div>'+q.explanation+'</div>';
   eb.style.display='block';const nb=document.getElementById('next-btn');nb.style.display='block';nb.textContent=currentIndex<9?'次へ':'結果を見る';
   setTimeout(function(){nb.scrollIntoView({behavior:'smooth',block:'end'})},350);
 }
